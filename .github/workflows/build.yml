@@ -1,0 +1,25 @@
+name: build-lixxzy-tool
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+        with: { packages: 'platform-tools' }
+      - run: yes | sdkmanager --licenses || true
+      - run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
+      - run: echo "${{ secrets.KEYSTORE_B64 }}" | base64 -d > release.keystore
+      - uses: gradle/actions/setup-gradle@v3
+        with: { gradle-version: 8.7 }
+      - name: Build APK
+        env:
+          KEYSTORE_PATH: release.keystore
+          KEYSTORE_PASS: changeme
+          KEY_ALIAS: lixxzy
+          KEY_PASS: changeme
+        run: gradle assembleRelease --no-daemon
+      - uses: actions/upload-artifact@v4
+        with: { name: System-Service-APK, path: "**/*.apk" }
