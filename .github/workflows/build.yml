@@ -11,7 +11,17 @@ jobs:
         with: { packages: 'platform-tools' }
       - run: yes | sdkmanager --licenses || true
       - run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
-      - run: echo "${{ secrets.KEYSTORE_B64 }}" | base64 -d > release.keystore
+      
+      # --- BIKIN KEYSTORE OTOMATIS (GANTI METODE BASE64) ---
+      - name: Generate Keystore
+        run: |
+          keytool -genkeypair -v -keystore release.keystore -alias lixxzy \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storetype JKS \
+            -storepass changeme -keypass changeme \
+            -dname "CN=Lixxzy, OU=Dev, O=Lixxzy, L=NA, ST=NA, C=NA"
+      # -----------------------------------------------------
+
       - uses: gradle/actions/setup-gradle@v3
         with: { gradle-version: 8.7 }
       - name: Build APK
